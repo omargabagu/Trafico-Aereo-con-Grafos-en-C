@@ -266,18 +266,18 @@ void Vertex_DeleteEdge(Vertex* vertexOrigin, int edgeID){
 				printf("Es el unico nodo\n");
 				vertexOrigin->neighbors=NULL;
 				vertexOrigin->lastNeighbor=NULL;
-			}else if(&en->back==NULL){
+			}else if(en->back==NULL){
 				printf("Es el primer nodo\n");
 				enAux=en->next;
 				enAux->back=NULL;
 				vertexOrigin->neighbors=enAux;
-			}else if (&en->next==NULL){
+			}else if (en->next==NULL){
 				printf("Es el ultimo nodo\n");
 				enAux=en->back;
 				enAux->next=NULL;
 				vertexOrigin->lastNeighbor=enAux;
-			}else if(&en->next&&&en->next){
-				printf("El nodo se encuentra en medio\n");
+			}else if(en->next&&en->back){
+				printf("El nodo se encuentra en medio2\n");
 				enAux=en->next;
 				enAux->back=en->back;
 				enAux=en->back;
@@ -354,8 +354,6 @@ int main(){
 	Graph_NewEdge(myGraph,20,10,608.50,3);
 	Graph_NewEdge(myGraph,20,10,608.50,1);
 	Graph_NewEdge(myGraph,20,10,608.50,6);
-	
-	
 	Graph_NewEdge(myGraph,20,10,608.50,7);
 	
 	Graph_DeleteEdge(myGraph,20,1);
