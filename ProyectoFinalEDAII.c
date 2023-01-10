@@ -70,23 +70,27 @@ EdgeNode* EdgeNode_Insert(Vertex* originVertex, int edgeID, int vertexDestiny, d
 	printf("Insertando nodo a la lista de arcos...	\n");
 	//Se crea el nuevo nodo a insertar
 	EdgeNode* en = EdgeNode_New(edgeID, vertexDestiny, weight);
-	//Se le asigna el nuevo vertice --REDUNDANTE--
+	//Se le asigna el nuevo arco --REDUNDANTE--
 	en->edge.edgeID = edgeID;
 	en->edge.vertexDestiny= vertexDestiny;
 	en->edge.weight = weight;
+	//Se le asigna información de nodo
 	//Si no es el primer nodo de arcos del vertice
-	if (originVertex->lastNeighbor){
+	if (originVertex->edgeListLen>0){
 		//El siguiente nodo del (ex)ultimo nodo apunta a al nuevo nodo 
-		originVertex->lastNeighbor->next=en;	
+		originVertex->lastNeighbor->next=en;
+		//Se especifica la informacion del nuevo arco
+		en->back=originVertex->lastNeighbor;	
 	}else{//Si es el primer nodo de arcos del vertice
 		//Se establece como el primer nodo de arcos al nodo insertado
 		originVertex->neighbors=en;
+		//Se especifica la informacion del nuevo arco
+		en->back=NULL;
 	}
-	//Se especifica la informacion del nuevo arco
-	en->back=originVertex->lastNeighbor;
+
 	//Se actualiza quien es es el ulrimo nodo de la lista
 	originVertex->lastNeighbor=en;
-	
+	en->next=NULL;
 	
 	//Se suma 1 la longitud de la lista
 	originVertex->edgeListLen++;
@@ -139,7 +143,7 @@ VertexNode* VertexNode_Insert(Graph* originGraph, int vertexID){
 	//Se crea el nuevo nodo a insertar
 	VertexNode* vn = VertexNode_New(vertexID);
 	//Se le asigna el nuevo vertice
-	vn->vertex.vertexID= vertexID;
+	vn->vertex.vertexID = vertexID;
 	vn->vertex.neighbors = NULL;
 	vn->vertex.lastNeighbor= NULL;
 	//Si no es el primer nodo de vertices del grafo
@@ -158,7 +162,7 @@ VertexNode* VertexNode_Insert(Graph* originGraph, int vertexID){
 	
 	//Se suma 1 la longitud de la lista
 	originGraph->vertexListLen++;
-	printf("Nodo insertado!\n");
+	printf("Nodo insertado!\n\n");
 	return vn;
 }
 
@@ -205,6 +209,27 @@ Edge* Edge_Get(Vertex* originVertex, int edgeID){
 		return NULL;
 	}
 }
+EdgeNode* EdgeNode_Get(Vertex* originVertex, int edgeID){
+	printf("Buscando nodo de arco  con ID: %i\n",edgeID);	
+	if (originVertex->neighbors){
+		printf("	Si hay nodos de arcos\n");
+		EdgeNode* en=originVertex->neighbors;
+		for(int i=0;i<originVertex->edgeListLen;i++){
+			Edge  *e = &en->edge;
+			if (e->edgeID==edgeID){
+				printf("Arco encontrado\n");
+				return en;
+			}
+			en=en->next;
+		} 
+		printf("Nodo de arco NO encontrado!\n");
+		return NULL;
+			
+	}else{
+		printf("No hay arcos!\n");
+		return NULL;
+	}
+}
 bool Graph_NewEdge(Graph* graph,int originVertexID, int destinyVertexID,double weight,int edgeID){
 	Vertex* originVertex = Vertex_Get(graph,originVertexID );
 	if(originVertex&&Vertex_Get(graph,destinyVertexID )){
@@ -225,6 +250,57 @@ bool Graph_NewVertex(Graph* graph, int vertexID){
 	}
 	printf("Vertice con no creado, ID: %i ya existente.\n", vertexID);
 	return false;	
+}
+//Eliminar y liberar un arco dada su llave y vertice de origen
+void Vertex_DeleteEdge(Vertex* vertexOrigin, int edgeID){
+	//Si el vertice padre de origen tiene vecinos
+	if (vertexOrigin->neighbors&&vertexOrigin->edgeListLen>0){
+		printf("El vertice origen del arco a elminar, si tiene arcos.\n");
+		EdgeNode* en = EdgeNode_Get(vertexOrigin, edgeID);
+		//Si el nodo con edgeID existe
+		if (en){
+			printf("Obteniendo información del nodo del arco...	");
+			EdgeNode* enAux;
+			//Si es el unico nodo
+			if (vertexOrigin->edgeListLen==1){
+				printf("Es el unico nodo\n");
+				vertexOrigin->neighbors=NULL;
+				vertexOrigin->lastNeighbor=NULL;
+			}else if(&en->back==NULL){
+				printf("Es el primer nodo\n");
+				enAux=en->next;
+				enAux->back=NULL;
+				vertexOrigin->neighbors=enAux;
+			}else if (&en->next==NULL){
+				printf("Es el ultimo nodo\n");
+				enAux=en->back;
+				enAux->next=NULL;
+				vertexOrigin->lastNeighbor=enAux;
+			}else if(&en->next&&&en->next){
+				printf("El nodo se encuentra en medio\n");
+				enAux=en->next;
+				enAux->back=en->back;
+				enAux=en->back;
+				enAux->next=en->next;
+			}else {
+				return;
+			}
+			vertexOrigin->edgeListLen--;
+			//Eliminar nodo 
+			printf("Eliminando nodo...\n");
+			free(en);
+			printf("----NODO ELIMINADO----\n");
+			
+		}
+	}
+	
+}
+// Eliminar un arco de un vertice de un grafo
+void Graph_DeleteEdge(Graph* g, int vertexID, int edgeID){
+	Vertex* v=Vertex_Get(g,vertexID);
+	if (v){
+		Vertex_DeleteEdge(v,edgeID);
+	}
 }
 // Crear un grafo
 Graph* Graph_New(){
@@ -252,7 +328,10 @@ void PrintGraph(Graph* g ){
 				EdgeNode* en = v->neighbors;
 				for (int j=0;j<v->edgeListLen;j++){
 					Edge* e= &en->edge;
-					printf("	%i. %i\n",j,e->edgeID);
+					printf("	%i. %i",j,e->edgeID);
+					if(en->back)printf("b");
+					if(en->next)printf("n");
+					printf("\n");
 					en=en->next;
 				}	
 			}
@@ -271,15 +350,16 @@ int main(){
 	
 	Graph_NewVertex(myGraph,10);
 	//Creando un arco entre el vertice 20 y 10, con un peso de 608.50 y con ID de 1
-	Graph_NewEdge(myGraph,20,10,608.50,1);
-	
-	Graph_NewEdge(myGraph,10,20,608.50,2);
-	
+	Graph_NewEdge(myGraph,20,10,608.50,2);
 	Graph_NewEdge(myGraph,20,10,608.50,3);
+	Graph_NewEdge(myGraph,20,10,608.50,1);
+	Graph_NewEdge(myGraph,20,10,608.50,6);
 	
-	Graph_NewVertex(myGraph,15);
 	
-	Graph_NewEdge(myGraph,15,10,608.50,3);
+	Graph_NewEdge(myGraph,20,10,608.50,7);
+	
+	Graph_DeleteEdge(myGraph,20,1);
+	
 	//Imprimendo grafo
 	PrintGraph(myGraph);
 	
