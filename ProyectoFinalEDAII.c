@@ -196,6 +196,27 @@ Vertex* Vertex_Get(Graph* graph,int vertexID){
 		return NULL;
 	}
 }
+VertexNode* VertexNode_Get(Graph* graph,int vertexID){
+	DBG_PRINT("Buscando vertice  con ID: %i\n",vertexID);	
+	if (graph->vertexes){
+		DBG_PRINT("	Si hay vertices\n");
+		VertexNode* vn=graph->vertexes;
+		for(int i=0;i<graph->vertexListLen;i++){
+			Vertex  *sv = &vn->vertex;
+			if (sv->vertexID==vertexID){
+				DBG_PRINT("Vector encontrado\n");
+				return vn;
+			}
+			vn=vn->next;
+		} 
+		DBG_PRINT("Vertice no encontrado!\n");
+		return NULL;
+			
+	}else{
+		DBG_PRINT("No hay vertices!\n");
+		return NULL;
+	}
+}
 Edge* Edge_Get(Vertex* originVertex, int edgeID){
 	DBG_PRINT("Buscando arco  con ID: %i\n",edgeID);	
 	if (originVertex->neighbors){
@@ -332,6 +353,109 @@ Graph* Graph_New(){
 	g = NULL;
 	return NULL;
 }
+//Retorna el ID del vertice vecino a un vertice, retorna -1 si el vertice no tien vecinos
+int VertexID_LowestNeighbor(Vertex* vertex){
+	EdgeNode* en = vertex->neighbors;
+	if (en){
+		int lowestWeightEdgeID=en->edge.vertexDestiny;
+		//printf("Lowest = %i\n",lowestWeightEdgeID);
+		double lowestWeight;
+		for(int i=1;i<vertex->edgeListLen;i++){
+			
+			
+			en=en->next;
+			//printf("	%f > %f",lowestWeight,en->edge.weight);
+			if (lowestWeight> en->edge.weight){
+				lowestWeightEdgeID=en->edge.vertexDestiny;
+			}
+			else{
+				//printf("  No\n");
+			}
+				
+			//printf("Lowest = %i\n",lowestWeightEdgeID);
+		}
+		
+		return lowestWeightEdgeID;
+	}
+	else{
+		//No tiene vecinos 
+		return -1; 
+	}
+}
+//Estructura par busqueda
+typedef struct{
+	int vertexID;
+	VertexNode* vectorNode;
+	int status;
+}DFSVector;
+//retorna el indice del arreglo DFSVList[] donde se encuentra el elemento con vID
+//Si no existe retorna -1
+int DFSList_GetIndex (int size,DFSVector* DFSVList,int vID){
+	for (int i=0;i<size;i++){;
+		if (vID==(DFSVList+i)->vertexID){
+			return i;
+		}
+	}
+	return -1;
+}
+//Busqueda por profundidad por peso EN DESARROLLO (parcialmente funcionando).
+void DFS_Weight(Graph* graph, VertexNode* vnStart, VertexNode* vnEnd){
+	VertexNode* vn = graph->vertexes;
+	int n=graph->vertexListLen;
+	//pseudoTablaHash
+	DFSVector DFSVList [n];
+	//Llenando tabla con los vertices del grafo
+	for (int i=0;i<n;i++){
+		DFSVList [i].vectorNode=vn;
+		DFSVList [i].vertexID=vn->vertex.vertexID;
+		DFSVList [i].status=0;
+		//printf("%i,%i",DFSVList [i].vertexID,DFSVList [i].status);
+		vn=vn->next;
+	}
+	vn = vnStart;
+	//condición de i temporal
+	for(int i=0;vn!=vnEnd&&i<5;i++){
+		//Verice abierto status=1
+		DFSVList[DFSList_GetIndex(n,DFSVList,vn->vertex.vertexID)].status=1;
+		printf("%2i ->",vn->vertex.vertexID);
+		//El siguiente vertice es igual al vecino con menor peso
+		int lowestwID = VertexID_LowestNeighbor(&vn->vertex);
+		if (lowestwID!=-1){
+			//Se obtiene el ID del vertice vecino con menor peso
+			vn = VertexNode_Get(graph,lowestwID);
+			printf("%2i\n",vn->vertex.vertexID);
+		}else{
+			printf(" NULL\n");
+			break;
+		}
+	}
+	printf("\nDONE\n");
+	
+	/*for(;vn!=vnEnd;){
+		
+		en = vnStart->vertex.neighbors;
+	}*/
+	
+	
+	/*for (;;){
+		VertexNode* vnNext = VertexNode_Get(graph,VertexID_LowestNeighbor(&vnStart->vertex));
+	}*/
+	
+	
+	
+	
+	/*if (en){
+		int 
+		printf("Correcto.\n");
+		//Obtener el vecino con menor peso. 
+		VertexNode* vnNext = VertexNode_Get(graph,VertexID_LowestNeighbor(&vnStart->vertex));
+		
+	}
+	else {
+		printf("Error el vertice con ID: %i no tiene vecinos.\n",vnStart->vertex.vertexID );
+		//Error el vertice no tiene vecinos. 
+	}*/
+}
 
 void PrintGraph(Graph* g ){ 
 	if(g->vertexes){
@@ -362,25 +486,27 @@ int main(){
 	//Creando un grafo
 	Graph* myGraph = Graph_New();
 	// Creando un vertice
+	Graph_NewVertex(myGraph,5,"MEX");
 	Graph_NewVertex(myGraph,20,"ACA");
-	
 	Graph_NewVertex(myGraph,10,"GDL");
 	Graph_NewVertex(myGraph,11,"CZM");
 	Graph_NewVertex(myGraph,12,"CAN");
 	Graph_NewVertex(myGraph,13,"MTY");
 	//Creando un arco entre el vertice 20 y 10, con un peso de 608.50 y con ID de 1
-	Graph_NewEdge(myGraph,20,10,1500,1);
-	Graph_NewEdge(myGraph,20,11,608,2);
-	Graph_NewEdge(myGraph,20,12,2340,3);
+	Graph_NewEdge(myGraph,20,5,300,0);
+	Graph_NewEdge(myGraph,20,11,1500,1);
+	Graph_NewEdge(myGraph,20,12,608,2);
+	Graph_NewEdge(myGraph,11,10,2340,3);
 	Graph_NewEdge(myGraph,10,13,2100.50,1);
-	Graph_NewEdge(myGraph,13,10,980,1);
-	Graph_NewEdge(myGraph,13,20,740,2);
-	Graph_NewEdge(myGraph,11,10,980,1);
-	
-	Graph_DeleteEdge(myGraph,20,1);
-	
-	//Imprimendo grafo
+	Graph_NewEdge(myGraph,10,20,980,1);
+	Graph_NewEdge(myGraph,12,13,740,2);
 	PrintGraph(myGraph);
+	//Graph_DeleteEdge(myGraph,20,1);
+	//printf("ID del vertice con menor ID: %i",VertexID_LowestNeighbor(Vertex_Get(myGraph,20)));
+	DFS_Weight(myGraph,VertexNode_Get(myGraph,20),VertexNode_Get(myGraph,13));
+	//printf("%i\n",VertexID_LowestNeighbor(Vertex_Get(myGraph,13)));
+	//Imprimendo grafo
+	
 	
 	return 0;
 }
