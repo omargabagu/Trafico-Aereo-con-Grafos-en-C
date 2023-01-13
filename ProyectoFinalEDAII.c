@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdint.h>
+//#Include "edgesnodes.h"
 
 #define DBG_HELP 0
 
@@ -45,6 +46,7 @@ typedef struct VertexNode VertexNode;
 struct VertexNode{
 	VertexNode* back;	//< Vertice anterior en la lista si back=NULL este nodo es el primero
 	Vertex vertex;
+	int code;
 	VertexNode* next;	//< Vertice siguiente en la lista si next=NULL este nodo es el ultimo
 };
 typedef struct VertexNode VertexNode;
@@ -128,6 +130,7 @@ VertexNode* VertexNode_New(int vertexID, char* vertexName){
 	VertexNode* vn = (VertexNode*) malloc( sizeof( VertexNode ) );
 	if( vn ){
 		vn-> back = NULL;
+		vn->code=0;
 		vn-> vertex = *Vertex_New(vertexID,vertexName);
 		vn-> next = NULL;
 		DBG_PRINT("Nodo de vertice creado!\n");
@@ -138,7 +141,6 @@ VertexNode* VertexNode_New(int vertexID, char* vertexName){
 	vn = NULL;
 	return NULL; 
 }
-
 // Grafo
 typedef struct{
 	VertexNode *vertexes;		///< Apunta al primer nodo de una lista de vertices
@@ -354,107 +356,224 @@ Graph* Graph_New(){
 	return NULL;
 }
 //Retorna el ID del vertice vecino a un vertice, retorna -1 si el vertice no tien vecinos
-int VertexID_LowestNeighbor(Vertex* vertex){
-	EdgeNode* en = vertex->neighbors;
-	if (en){
-		int lowestWeightEdgeID=en->edge.vertexDestiny;
-		//printf("Lowest = %i\n",lowestWeightEdgeID);
-		double lowestWeight;
-		for(int i=1;i<vertex->edgeListLen;i++){
-			
-			
-			en=en->next;
-			//printf("	%f > %f",lowestWeight,en->edge.weight);
-			if (lowestWeight> en->edge.weight){
-				lowestWeightEdgeID=en->edge.vertexDestiny;
-			}
-			else{
-				//printf("  No\n");
-			}
-				
-			//printf("Lowest = %i\n",lowestWeightEdgeID);
-		}
-		
-		return lowestWeightEdgeID;
-	}
-	else{
-		//No tiene vecinos 
-		return -1; 
-	}
-}
-//Estructura par busqueda
-typedef struct{
-	int vertexID;
-	VertexNode* vectorNode;
-	int status;
-}DFSVector;
-//retorna el indice del arreglo DFSVList[] donde se encuentra el elemento con vID
-//Si no existe retorna -1
-int DFSList_GetIndex (int size,DFSVector* DFSVList,int vID){
-	for (int i=0;i<size;i++){;
-		if (vID==(DFSVList+i)->vertexID){
-			return i;
-		}
-	}
-	return -1;
-}
-//Busqueda por profundidad por peso EN DESARROLLO (parcialmente funcionando).
-void DFS_Weight(Graph* graph, VertexNode* vnStart, VertexNode* vnEnd){
-	VertexNode* vn = graph->vertexes;
-	int n=graph->vertexListLen;
-	//pseudoTablaHash
-	DFSVector DFSVList [n];
-	//Llenando tabla con los vertices del grafo
+
+int visited (Graph* g,VertexNode* vn,int data){
+	Vertex* v = &vn->vertex;
+	EdgeNode* en = v->neighbors;
+	
+	int n = v->edgeListLen;
+	int visited=0;
 	for (int i=0;i<n;i++){
-		DFSVList [i].vectorNode=vn;
-		DFSVList [i].vertexID=vn->vertex.vertexID;
-		DFSVList [i].status=0;
-		//printf("%i,%i",DFSVList [i].vertexID,DFSVList [i].status);
-		vn=vn->next;
-	}
-	vn = vnStart;
-	//condición de i temporal
-	for(int i=0;vn!=vnEnd&&i<5;i++){
-		//Verice abierto status=1
-		DFSVList[DFSList_GetIndex(n,DFSVList,vn->vertex.vertexID)].status=1;
-		printf("%2i ->",vn->vertex.vertexID);
-		//El siguiente vertice es igual al vecino con menor peso
-		int lowestwID = VertexID_LowestNeighbor(&vn->vertex);
-		if (lowestwID!=-1){
-			//Se obtiene el ID del vertice vecino con menor peso
-			vn = VertexNode_Get(graph,lowestwID);
-			printf("%2i\n",vn->vertex.vertexID);
-		}else{
-			printf(" NULL\n");
-			break;
+		if (VertexNode_Get(g,en->edge.vertexDestiny)->code==data){
+			visited++;
 		}
+		en=en->next;
 	}
-	printf("\nDONE\n");
-	
-	/*for(;vn!=vnEnd;){
-		
-		en = vnStart->vertex.neighbors;
-	}*/
-	
-	
-	/*for (;;){
-		VertexNode* vnNext = VertexNode_Get(graph,VertexID_LowestNeighbor(&vnStart->vertex));
-	}*/
-	
-	
-	
-	
-	/*if (en){
-		int 
-		printf("Correcto.\n");
-		//Obtener el vecino con menor peso. 
-		VertexNode* vnNext = VertexNode_Get(graph,VertexID_LowestNeighbor(&vnStart->vertex));
+	return visited;
+
+}
+//Los resultados se guardan en partes de enteros, son una lista de enteros que 
+//representan los IDs de los aeropuertos. 
+typedef struct{
+	int arrayIDs[20];
+	double cost;
+	int resSize;
+}Res;
+Res* Res_New(int n, int IDs[], double weights[]){
+	Res* res = calloc(1, sizeof(Res));
+	if (res==NULL){
+		free(res);
+		return NULL;
+	}
+	res->cost=0;
+	res->resSize=n;
+	for (int i =0;i<n;i++){
+		res->arrayIDs[i]=IDs[i];
+		if(weights[i]){
+			res->cost=res->cost+weights[i];
+		}
 		
 	}
-	else {
-		printf("Error el vertice con ID: %i no tiene vecinos.\n",vnStart->vertex.vertexID );
-		//Error el vertice no tiene vecinos. 
-	}*/
+	return res;
+}
+typedef struct{
+	Res* arrayRes[50];
+	int listSize;
+}ResList;
+
+ResList* ResList_New(){
+	ResList* rl = calloc(1, sizeof(ResList));
+	if (rl==NULL){
+		free(rl);
+		return NULL;
+	}
+	rl->listSize=0;
+}
+void ResList_NewRes(ResList* rl,Res* r){
+	rl->arrayRes[rl->listSize]=r;
+	rl->listSize++;
+}
+void Res_Delete(Res* r){
+	free(r);
+}
+void ResList_Delete(ResList* rl){
+	for (int i=0;i<50;i++){
+		Res_Delete(rl->arrayRes[i]);
+	}
+	free(rl);
+}
+void ResList_Print(ResList* resList){
+	
+	printf("\n\n	--------------POSIBLES RUTAS----------------\n");
+	for (int i=0;i<resList->listSize;i++){
+		for (int j=0;j<resList->arrayRes[i]->resSize;j++){
+			printf("%i->",resList->arrayRes[i]->arrayIDs[j]);
+		}
+		printf("		Costo de los vuelos: %f\n",resList->arrayRes[i]->cost);
+	}
+	
+}
+//Busqueda por profundidad altamente modificada para registrar todas las rutas posibles .
+void OmargabaguAlgorithm(Graph* g, VertexNode* vnStart,VertexNode* vnEnd,ResList* resList){
+	int n=g->vertexListLen;
+	int Stack[n+2]; int SP=0;
+	double weight[n+2];
+	VertexNode* vn = vnStart;
+	bool stop=false;
+	for (;stop==false;){
+		
+		Stack[SP]=vn->vertex.vertexID;
+		EdgeNode* en = vn->vertex.neighbors;
+		int nn = vn->vertex.edgeListLen;
+		int n0 = visited(g,vn,0);
+		int n1 = visited(g,vn,1);
+		int n2 = visited(g,vn,2);
+		int n3 = visited(g,vn,3);
+		
+		//printf("	n0=%i, n1=%i, n2=%i, n3=%i		Stack[SP=%i]=%i\n",n0,n1,n2,n3,SP,Stack[SP]);
+		SP++;
+		printf("%i -> ",vn->vertex.vertexID);
+		vn->code=1;
+		
+		
+		if (n3>0){
+			//save stack
+			Stack[SP]=vn->vertex.vertexID;
+			printf("\n");
+			int arrayIDs[SP+1];
+			double arrayW[SP];
+			arrayIDs[SP+1]=vnEnd->vertex.vertexID;
+			for (int i=0;i<SP+1;i++){
+				arrayW[i]=weight[i+1];
+				arrayIDs[i]=Stack[i];
+			}arrayIDs[SP]=vnEnd->vertex.vertexID;
+			Res* r = Res_New(SP+1,arrayIDs,arrayW);
+			ResList_NewRes(resList,r);
+			for (int i=0;i<SP+1;i++){
+				printf("-%i-",arrayIDs[i]);
+			}arrayIDs[SP+1]=vnEnd->vertex.vertexID;
+			printf("\n");
+		}
+		if (vn->vertex.vertexID==vnEnd->vertex.vertexID){
+			vn->code=3;
+			Stack[SP]=vn->vertex.vertexID;
+			
+			//vn=pop
+			SP=SP-2;vn=VertexNode_Get(g,Stack[SP]);
+			printf("%ib",vn->vertex.vertexID);
+		}
+		else if((n0)>0){
+			//push
+			while(VertexNode_Get(g,en->edge.vertexDestiny)->code!=0){
+				if (en->next){
+					en=en->next;
+				}
+			}
+			weight[SP]=en->edge.weight;
+			vn=VertexNode_Get(g,en->edge.vertexDestiny);
+			printf("%ia",vn->vertex.vertexID);
+		}
+		else if (nn==0||n0==0){
+			vn->code=2;
+			
+			//vn=pop
+			SP=SP-2;vn=VertexNode_Get(g,Stack[SP]);
+			printf("NULL");
+		}
+		else{
+			printf("ERROR EN LA LOGICA");
+			stop=true;
+		}
+		printf(" :D\n");
+		if (SP<0){
+			stop=true;
+		}		
+	}
+
+} 
+void Vertex_DeleteAllEdges(Vertex* v){
+	EdgeNode* ed = v->neighbors;
+	for (;ed!=v->lastNeighbor;ed=ed->next){
+		Vertex_DeleteEdge(v,ed->edge.edgeID);
+	}
+	//Vertex_DeleteEdge(v,v->lastNeighbor->edge.edgeID);
+	v->neighbors=NULL;
+	v->lastNeighbor=NULL;
+	v->neighbors=NULL;
+	v->edgeListLen=0;
+	
+}
+void VertexNode_Delete(VertexNode* vn){
+	Vertex* v = &vn->vertex;
+	Vertex_DeleteAllEdges(v);
+	free(v);
+	free(vn);
+}
+void Graph_DeleteVertex(Graph* g, int vertexID){
+	VertexNode* vn = VertexNode_Get(g,vertexID);
+	if(vn){
+		VertexNode_Delete(vn);
+	}
+}
+void Graph_DeleteAllVertexes(Graph* g){
+	VertexNode* vn = g->vertexes;
+	if (vn){
+		for (;vn->next!=NULL;vn=vn->next){
+			Graph_DeleteVertex(g,vn->vertex.vertexID);
+		}//Graph_DeleteVertex(g,vn->vertex.vertexID);
+	}
+	g->lastVertexNode=NULL;
+	g->vertexes=NULL;
+	g->vertexListLen=0;
+}
+void Graph_Delete(Graph* g){
+	if (g){
+		Graph_DeleteAllVertexes(g);
+		free(g);
+	}
+}
+void Graph_Sort(Graph* g,int vertexIDA,int vertexIDB,ResList* resList){
+	
+	OmargabaguAlgorithm(g,VertexNode_Get(g,vertexIDA),VertexNode_Get(g,vertexIDB),resList);
+}
+void createRegistry(FILE** json_output, int vertexID, char vertexName[]){
+    fprintf( *json_output, "{ " );
+    fprintf( *json_output, "\"Airport\": \"%s\", \"AirPortID\": %d,", vertexName, vertexID );
+    fprintf( *json_output, " }" );
+}
+
+void createJSON(int vertexID, char vertexName[]){
+    FILE* json_output = fopen("registro.json", "a");
+    if(!json_output){
+		printf("Error abriendo el archivo JSON\n");
+		exit(1);
+	}
+	fprintf(json_output, "{\n");
+	fprintf( json_output, "\"historial\": [\n" );
+	createRegistry(&json_output, vertexID, vertexName);
+	fprintf( json_output, "\n]" );
+	fprintf( json_output, "\n}" );
+	fclose( json_output );
 }
 
 void PrintGraph(Graph* g ){ 
@@ -482,7 +601,16 @@ void PrintGraph(Graph* g ){
 void PrintGraphInfo(Graph* g){
 	printf("Cantidad de vertices: %il\n",g->vertexListLen);
 }
+void PrintTitle(){
+	printf("     ___        _______   .______          ______   .___________. __  .___  ___.  _______ \n");
+	printf("    /   \%c      |   ____|  |   _  \%c        /  __  \%c  |           ||  | |   \%c/   | |   ____|\n",92,92,92,92);
+	printf("   /  ^  \%c     |  |__     |  |_)  |      |  |  |  | `---|  |----`|  | |  \%c  /  | |  |__   \n",92,92);
+	printf("  /  /_\%c  \%c    |   __|    |      /       |  |  |  |     |  |     |  | |  |\%c/|  | |   __|  \n",92,92,92);
+	printf(" /  _____  \%c   |  |____   |  |\%c  \%c----.  |  `--'  |     |  |     |  | |  |  |  | |  |____ \n",92,92,92);
+	printf("/__/     \%c__\%c  |_______|  | _| `._____|   \%c______/      |__|     |__| |__|  |__| |_______|\n",92,92,92);
+}
 int main(){
+	PrintTitle();
 	//Creando un grafo
 	Graph* myGraph = Graph_New();
 	// Creando un vertice
@@ -492,21 +620,30 @@ int main(){
 	Graph_NewVertex(myGraph,11,"CZM");
 	Graph_NewVertex(myGraph,12,"CAN");
 	Graph_NewVertex(myGraph,13,"MTY");
+	Graph_NewVertex(myGraph,9,"LOL");
 	//Creando un arco entre el vertice 20 y 10, con un peso de 608.50 y con ID de 1
 	Graph_NewEdge(myGraph,20,5,300,0);
 	Graph_NewEdge(myGraph,20,11,1500,1);
 	Graph_NewEdge(myGraph,20,12,608,2);
 	Graph_NewEdge(myGraph,11,10,2340,3);
-	Graph_NewEdge(myGraph,10,13,2100.50,1);
-	Graph_NewEdge(myGraph,10,20,980,1);
-	Graph_NewEdge(myGraph,12,13,740,2);
+	Graph_NewEdge(myGraph,10,13,2100.50,4);
+	Graph_NewEdge(myGraph,10,20,980,5);
+	Graph_NewEdge(myGraph,12,13,740,6);
+	Graph_NewEdge(myGraph,10,9,1000,7);
+	Graph_NewEdge(myGraph,9,13,790,8);
 	PrintGraph(myGraph);
 	//Graph_DeleteEdge(myGraph,20,1);
-	//printf("ID del vertice con menor ID: %i",VertexID_LowestNeighbor(Vertex_Get(myGraph,20)));
-	DFS_Weight(myGraph,VertexNode_Get(myGraph,20),VertexNode_Get(myGraph,13));
+	ResList* MyList = ResList_New();
+	Graph_Sort(myGraph,10,12,MyList);
+	
 	//printf("%i\n",VertexID_LowestNeighbor(Vertex_Get(myGraph,13)));
 	//Imprimendo grafo
+	ResList_Print(MyList);
 	
+	
+	Graph_Delete(myGraph);
+	
+	ResList_Delete(MyList);
 	
 	return 0;
 }
