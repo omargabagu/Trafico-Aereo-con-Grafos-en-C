@@ -11,7 +11,7 @@
 #define DBG_HELP 0
 
 #if DBG_HELP > 0
-#define DBG_PRINT( ... ) do{ fprintf( stderr, "DBG:" __VA_ARGS__ ); } while( 0 )
+#define DBG_PRINT( ... ) do{ fDBG_PRINT( stderr, "DBG:" __VA_ARGS__ ); } while( 0 )
 #else
 #define DBG_PRINT( ... ) ;
 #endif 
@@ -292,6 +292,7 @@ bool Graph_NewVertex(Graph* graph, int vertexID, char vertexName[] ){
 }
 //Eliminar y liberar un arco dada su llave y vertice de origen
 void Vertex_DeleteEdge(Vertex* vertexOrigin, int edgeID){
+	DBG_PRINT("6");
 	//Si el vertice padre de origen tiene vecinos
 	if (vertexOrigin->neighbors&&vertexOrigin->edgeListLen>0){
 		DBG_PRINT("El vertice origen del arco a elminar, si tiene arcos.\n");
@@ -429,7 +430,8 @@ void ResList_Print(ResList* resList){
 		for (int j=0;j<resList->arrayRes[i]->resSize;j++){
 			printf("%i->",resList->arrayRes[i]->arrayIDs[j]);
 		}
-		printf("		Costo de los vuelos: %f\n",resList->arrayRes[i]->cost);
+		DBG_PRINT("		Costo de los vuelos: %f",resList->arrayRes[i]->cost);
+		printf("\n");
 	}
 	
 }
@@ -512,42 +514,95 @@ void OmargabaguAlgorithm(Graph* g, VertexNode* vnStart,VertexNode* vnEnd,ResList
 
 } 
 void Vertex_DeleteAllEdges(Vertex* v){
+	DBG_PRINT("5");
 	EdgeNode* ed = v->neighbors;
-	for (;ed!=v->lastNeighbor;ed=ed->next){
-		Vertex_DeleteEdge(v,ed->edge.edgeID);
+	if (ed){
+		for (;ed->next;ed=ed->next){
+			DBG_PRINT("d");
+			Vertex_DeleteEdge(v,ed->edge.edgeID);
+		}
+		v->neighbors=NULL;
+		v->lastNeighbor=NULL;
+		v->neighbors=NULL;
+		v->edgeListLen=0;
 	}
+	DBG_PRINT("All edges deleted\n");
+	
+	
+
 	//Vertex_DeleteEdge(v,v->lastNeighbor->edge.edgeID);
-	v->neighbors=NULL;
-	v->lastNeighbor=NULL;
-	v->neighbors=NULL;
-	v->edgeListLen=0;
+
 	
 }
 void VertexNode_Delete(VertexNode* vn){
+	DBG_PRINT("4");
 	Vertex* v = &vn->vertex;
 	Vertex_DeleteAllEdges(v);
-	free(v);
+	DBG_PRINT("8");
+	//free(v);
 	free(vn);
 }
-void Graph_DeleteVertex(Graph* g, int vertexID){
-	VertexNode* vn = VertexNode_Get(g,vertexID);
-	if(vn){
-		VertexNode_Delete(vn);
+void Graph_DeleteVertex(Graph* graphOrigin, int vertexID){
+	DBG_PRINT("6");
+	//Si el vertice padre de origen tiene vecinos
+	if (graphOrigin->vertexes&&graphOrigin->vertexListLen>0){
+		DBG_PRINT("	El grafo origen del verice a elminar, si tiene vertices.\n");
+		VertexNode* vn = VertexNode_Get(graphOrigin, vertexID);
+		//Si el nodo con vertexID existe
+		if (vn){
+			DBG_PRINT("	Obteniendo información del nodo del vertice...	");
+			VertexNode* vnAux;
+			//Si es el unico nodo
+			if (graphOrigin->vertexListLen==1){
+				DBG_PRINT("	Es el unico nodo\n");
+				graphOrigin->vertexes=NULL;
+				graphOrigin->lastVertexNode=NULL;
+			}else if(vn->back==NULL){
+				DBG_PRINT("	Es el primer nodo\n");
+				vnAux=vn->next;
+				vnAux->back=NULL;
+				graphOrigin->lastVertexNode=vnAux;
+			}else if (vn->next==NULL){
+				DBG_PRINT("Es el ultimo nodo\n");
+				vnAux=vn->back;
+				vnAux->next=NULL;
+				graphOrigin->lastVertexNode=vnAux;
+			}else if(vn->next&&vn->back){
+				DBG_PRINT("El nodo se encuentra en medio2\n");
+				vnAux=vn->next;
+				vnAux->back=vn->back;
+				vnAux=vn->back;
+				vnAux->next=vn->next;
+			}else {
+				return;
+			}
+			graphOrigin->vertexListLen--;
+			//Eliminar nodo 
+			DBG_PRINT("Eliminando nodo...\n");
+			VertexNode_Delete(vn);
+			DBG_PRINT("----NODO ELIMINADO----\n");
+			
+		}
 	}
+	
 }
+
 void Graph_DeleteAllVertexes(Graph* g){
 	VertexNode* vn = g->vertexes;
 	if (vn){
-		for (;vn->next!=NULL;vn=vn->next){
+		for (int i=0;vn->next!=NULL;vn=vn->next,i++){
+			DBG_PRINT("Eliminando vertice no.%i\n",i);
 			Graph_DeleteVertex(g,vn->vertex.vertexID);
 		}//Graph_DeleteVertex(g,vn->vertex.vertexID);
+		g->lastVertexNode=NULL;
+		g->vertexes=NULL;
+		g->vertexListLen=0;
 	}
-	g->lastVertexNode=NULL;
-	g->vertexes=NULL;
-	g->vertexListLen=0;
+	
 }
 void Graph_Delete(Graph* g){
 	if (g){
+		DBG_PRINT("1");
 		Graph_DeleteAllVertexes(g);
 		free(g);
 	}
@@ -647,10 +702,4 @@ int main(){
 	
 	return 0;
 }
-
-
-
-
-
-
 
