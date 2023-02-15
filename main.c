@@ -1,51 +1,116 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "edgesvertex.h"
-/* run this program using the console pauser or add your own getch, system("pause") or input loop */
+#include <stdint.h>
+#define LINUXX 0
+#ifdef	_linux_
+#define LINUXX 1
+#define LIMPIAR "clear"
+#elif	_WIN32 || _WIN64
+#define	LIMPIAR "cls"
+#endif
+#include "gsearch.c"
+
 void PrintTitle(){
-	printf("     ___        _______   .______          ______   .___________. __  .___  ___.  _______ \n");
-	printf("    /   \%c      |   ____|  |   _  \%c        /  __  \%c  |           ||  | |   \%c/   | |   ____|\n",92,92,92,92);
-	printf("   /  ^  \%c     |  |__     |  |_)  |      |  |  |  | `---|  |----`|  | |  \%c  /  | |  |__   \n",92,92);
-	printf("  /  /_\%c  \%c    |   __|    |      /       |  |  |  |     |  |     |  | |  |\%c/|  | |   __|  \n",92,92,92);
-	printf(" /  _____  \%c   |  |____   |  |\%c  \%c----.  |  `--'  |     |  |     |  | |  |  |  | |  |____ \n",92,92,92);
-	printf("/__/     \%c__\%c  |_______|  | _| `._____|   \%c______/      |__|     |__| |__|  |__| |_______|\n",92,92,92);
-}
-int main(){
-	PrintTitle();
-	//Creando un grafo
-	Graph* myGraph = Graph_New();
-	// Creando un vertice
-	Graph_NewVertex(myGraph,5,"MEX");
-	Graph_NewVertex(myGraph,20,"ACA");
-	Graph_NewVertex(myGraph,10,"GDL");
-	Graph_NewVertex(myGraph,11,"CZM");
-	Graph_NewVertex(myGraph,12,"CAN");
-	Graph_NewVertex(myGraph,13,"MTY");
-	Graph_NewVertex(myGraph,9,"LOL");
-	//Creando un arco entre el vertice 20 y 10, con un peso de 608.50 y con ID de 1
-	Graph_NewEdge(myGraph,20,5,300,0);
-	Graph_NewEdge(myGraph,20,11,1500,1);
-	Graph_NewEdge(myGraph,20,12,608,2);
-	Graph_NewEdge(myGraph,11,10,2340,3);
-	Graph_NewEdge(myGraph,10,13,2100.50,4);
-	Graph_NewEdge(myGraph,10,20,980,5);
-	Graph_NewEdge(myGraph,12,13,740,6);
-	Graph_NewEdge(myGraph,10,9,1000,7);
-	Graph_NewEdge(myGraph,9,13,790,8);
-	PrintGraph(myGraph);
-	//Graph_DeleteEdge(myGraph,20,1);
-	ResList* MyList = ResList_New();
-	Graph_Sort(myGraph,10,12,MyList);
+	printf("|\\   ____\\|\\   __  \\|\\   __  \\|\\  _____\\\\   __  \\|\\   ____\\     \n");
+	printf("\\ \\  \\___|\\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\__/\\ \\  \\|\\  \\ \\  \\___|_  \n");
+	printf(" \\ \\  \\  __\\ \\   _  _\\ \\   __  \\ \\   __\\\\ \\  \\\\\\  \\ \\_____  \\  \n");
+	printf("  \\ \\  \\|\\  \\ \\  \\\\  \\\\ \\  \\ \\  \\ \\  \\_| \\ \\  \\\\\\  \\|____|\\  \\ \n");
+	printf("   \\ \\_______\\ \\__\\\\ _\\\\ \\__\\ \\__\\ \\__\\   \\ \\_______\\____\\_\\  \\ \n");
+	printf("    \\|_______|\\|__|\\|__|\\|__|\\|__|\\|__|    \\|_______|\\_________\\\n");
+	printf("Ruta más rapida por omargabagu                      \\|_________|\n\n");
 	
-	//printf("%i\n",VertexID_LowestNeighbor(Vertex_Get(myGraph,13)));
-	//Imprimendo grafo
-	ResList_Print(MyList);
-	
-	
-	Graph_Delete(myGraph);
-	
-	ResList_Delete(MyList);
-	
-	return 0;
 }
 
+void main() {
+	int opc=0;
+	Graph* miGrafo = Graph_New();
+	do {
+		PrintTitle();
+		printf("Menú:\nIngresar el caracter para acceder a la opción.\n");
+		printf("0) Obtener Rutas  \n1) Ver Grafo \n2) Crear Verice\n3) Crear Arco\n4) Eliminar Vertice\n5) Eliminar Arco\n6) Salir\n");
+		printf("\n> ");
+		scanf("%i",&opc);
+		switch (opc){
+			case 0:
+				system(LIMPIAR); 
+				PrintTitle();
+				printf("Buscar rutas\n");
+				printf("	Ingresar ID del vertice de origen (int) ----> ");
+				int ID7; scanf("%i",&ID7);
+				printf("	Ingresar ID del vertice de destino (int) ---> ");
+				int ID8; scanf("%i",&ID8);
+				ResList* RList = ResList_New();
+				Graph_Sort(miGrafo,ID7,ID8,RList);
+				ResList_Print(RList);
+				ResList_Delete(RList);
+				printf("Enter para continuar...\n");
+				fflush(stdin);
+				getchar();
+				break;
+			case 1:
+				system(LIMPIAR); 
+				PrintTitle();
+				printf("Ver Grafo\n");
+				PrintGraph(miGrafo);
+				printf("Enter para continuar...\n");
+				fflush(stdin);
+				getchar();
+				break;
+			case 2:
+				system(LIMPIAR); 
+				PrintTitle();
+				printf("Crear Verice\n\n");
+				printf("	Ingresar ID del nuevo vertice (int) ------------> ");
+				int ID; scanf("%i",&ID);
+				printf("	Ingresar nombre del nuevo vertice (string) -----> ");
+				char name[10]; scanf("%s",&name);
+				Graph_NewVertex(miGrafo, ID, name );
+				printf("Enter para continuar...\n");
+				fflush(stdin);
+				getchar();
+				break;
+			case 3:
+				system(LIMPIAR); 
+				PrintTitle();
+				printf("Crear Arco\n\n");
+				printf("	Ingresar ID del vertice de origen (int) ----> ");
+				int ID1; scanf("%i",&ID1);
+				printf("	Ingresar ID del vertice de destino (int) ---> ");
+				int ID2; scanf("%i",&ID2);
+				printf("	Ingresar ID del nuevo arco (int) -----------> ");
+				int ID3; scanf("%i",&ID3);
+				printf("	Ingresar peso del nuevo arco (double) ------> ");
+				int W; scanf("%i",&W);
+				Graph_NewEdge(miGrafo,ID1, ID2,W,ID3); 
+				printf("Enter para continuar...\n");
+				fflush(stdin);
+				getchar();
+				break;
+			case 4:
+				system(LIMPIAR); 
+				PrintTitle();
+				printf("Eliminar Vertice\n\n");
+				printf("	Ingresar ID del vertice a eliminar (int) ---> ");
+				int ID4; scanf("%i",&ID4);
+				Graph_DeleteVertex(miGrafo, ID4);
+				break;
+			case 5:
+				system(LIMPIAR); 
+				PrintTitle();
+				printf("Eliminar Arco\n\n");
+				printf("	Ingresar ID del vertice padre del arco (int) ---> ");
+				int ID5; scanf("%i",&ID5);
+				printf("	Ingresar ID del arco a eliminar (int) ----------> ");
+				int ID6; scanf("%i",&ID6);
+				Graph_DeleteEdge(miGrafo, ID5, ID6);
+				break;
+			case 6:
+				Graph_Delete(miGrafo);
+				break;
+			default:
+				break;
+		}
+		system(LIMPIAR);
+	}while ((opc!=6));
+	
+}
