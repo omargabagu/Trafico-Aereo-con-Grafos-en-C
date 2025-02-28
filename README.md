@@ -31,14 +31,6 @@ This function is a graph-based pathfinding algorithm designed to identify and so
 4. **Backtracking**  
    - If no more unexplored neighbors are available, the algorithm **backtracks** to previous nodes.  
 
----
-
-## 🔧 Utility Functions  
-
-- **`visited()`** → Checks how many neighboring nodes have been visited.  
-- **`Res_New()`** → Creates a new result object containing a found path.  
-- **`ResList`** → Maintains a list of possible paths.  
-- **`Graph_Sort()`** → Calls the OmargabaguAlgorithm to search for routes between two specified vertices.  
 
 ---
 
